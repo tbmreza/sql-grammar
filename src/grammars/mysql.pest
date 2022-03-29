@@ -1,0 +1,8 @@
+file = { CREATE | mysql_identifier }
+
+mysql_identifier = { backtick ~ identifier ~ backtick }
+identifier = @{ ASCII_ALPHA ~ identifier_part* }
+identifier_part = { ASCII_ALPHANUMERIC | "_" }
+backtick = { "`" }
+
+CREATE = { ^"create" }
