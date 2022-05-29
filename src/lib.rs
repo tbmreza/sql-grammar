@@ -1,4 +1,5 @@
 use pest;
+pub mod parser;
 pub use pest::Parser;
 
 #[cfg(feature = "common")]
