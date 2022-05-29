@@ -1,6 +1,7 @@
 use sql_grammar::*;
 
 #[test]
+#[ignore]
 fn parser_infra() {
     let parsed = SQLParser::parse(Rule::file, "CREATE ")
         .expect("unsuccessful parse")
