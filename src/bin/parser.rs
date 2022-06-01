@@ -15,13 +15,14 @@ mod tests {
 
         let mut out = OpenOptions::new()
             .write(true)
-            .append(true)
+            .truncate(true)
             .create(true)
             .open("output.pest")
             .expect("std builder doesn't fail");
 
         for line in BufReader::new(inp).lines() {
-            let pest_line = parse_rule(line.unwrap().as_bytes()).unwrap();
+            // let pest_line = parse_rule(line.unwrap().as_bytes()).unwrap();
+            let pest_line = parse_rule_cand(line.unwrap().as_bytes()).unwrap();
 
             if let Err(e) = writeln!(out, "{}", pest_line) {
                 eprintln!("Couldn't write to file: {}", e);
@@ -75,5 +76,5 @@ mod tests {
     }
 }
 fn main() {
-    println!("{}", parse_rule(b"<question mark> ::= ?").unwrap());
+    println!("{}", parse_rule(b"<digit> ::= 1 | 2").unwrap());
 }

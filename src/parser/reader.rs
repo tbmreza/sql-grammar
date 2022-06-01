@@ -48,18 +48,6 @@ fn ada_sisa() {
     let output = rule_name().convert(String::from_utf8).parse(input);
 }
 
-#[test]
-fn expr_string() {
-    use super::*;
-    let input = b"::=  { $ }";
-    let output = rule_expr().convert(String::from_utf8).parse(input);
-    let res = match output {
-        Ok(s) => s,
-        _ => String::new(),
-    };
-    assert_eq!(res, String::from("{ $ }"));
-}
-
 use pom::parser::*;
 
 fn space<'a>() -> Parser<'a, u8, ()> {
@@ -70,13 +58,55 @@ fn rule_name<'a>() -> Parser<'a, u8, Vec<u8>> {
     sym(b'<') * none_of(b">").repeat(1..) - sym(b'>')
 }
 
-// The assignment operator and everything that comes after it.
+/// The assignment operator and everything that comes after it.
 fn rule_expr<'a>() -> Parser<'a, u8, Vec<u8>> {
-    seq(b"::=") * one_of(b" \t\r\n").repeat(0..).discard() * any().repeat(0..)
+    seq(b"::=") * space() * none_of(b"|").repeat(0..)
+}
+
+fn rule_expr_cand<'a>() -> Parser<'a, u8, (Vec<Vec<u8>>, Vec<u8>)> {
+    seq(b"::=") * space() * trailing_pipe().repeat(0..) - space() + none_of(b"|").repeat(0..)
+}
+#[test]
+fn cand() {
+    let input = b"::= 1 | 2 | 3";
+    let output = rule_expr_cand().parse(input);
+
+    let flat = match output {
+        Ok((mut ls, e)) => {
+            ls.push(e);
+            ls
+        }
+        _ => Vec::new(),
+    };
+
+    println!("{:?}", flat);
+}
+
+fn converter(parser_output: (Vec<Vec<u8>>, Vec<u8>)) -> Result<Expr, Box<dyn std::error::Error>> {
+    let expr_units = match parser_output {
+        (mut ls, e) => {
+            ls.push(e);
+            ls
+        }
+    };
+    // TODO expr_units to Choice
+    let res = Expr::Choice(
+        Box::new(Expr::Str(String::from("ehehe"))),
+        Box::new(Expr::Str(String::from("jaja"))),
+    );
+    Ok(res)
+}
+
+fn rule_name_expr_cand<'a>() -> Parser<'a, u8, (String, Expr)> {
+    rule_name().convert(String::from_utf8) - space() + rule_expr_cand().convert(converter)
 }
 
 fn rule_name_expr<'a>() -> Parser<'a, u8, (String, String)> {
     rule_name().convert(String::from_utf8) - space() + rule_expr().convert(String::from_utf8)
+}
+
+fn trailing_pipe<'a>() -> Parser<'a, u8, Vec<u8>> {
+    none_of(b"|").repeat(0..) - space() - sym(b'|')
 }
 
 pub fn parse_rule(input: &[u8]) -> Option<Rule> {
@@ -88,6 +118,21 @@ pub fn parse_rule(input: &[u8]) -> Option<Rule> {
                 name,
                 ty: RuleType::Normal,
                 expr: Expr::Str(expr),
+            };
+            Some(res)
+        }
+        _ => None,
+    }
+}
+pub fn parse_rule_cand(input: &[u8]) -> Option<Rule> {
+    let parsed = rule_name_expr_cand().parse(input);
+
+    match parsed {
+        Ok((name, expr)) => {
+            let res = Rule {
+                name,
+                ty: RuleType::Normal,
+                expr,
             };
             Some(res)
         }
