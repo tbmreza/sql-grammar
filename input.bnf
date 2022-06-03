@@ -1,2 +1,4 @@
 <question mark> ::= ?
 <exclam mark> ::= !
+<digit> ::= 1 | 2
+<yeayyyyy> ::= 1 | 2 | 45

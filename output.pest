@@ -1,2 +1,4 @@
 question_mark = { "?" }
 exclam_mark = { "!" }
+digit = { "1 " | "2" }
+yeayyyyy = { "1 " | " 2 " | "45" }
