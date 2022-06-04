@@ -19,29 +19,36 @@ pub fn rule_name_expr<'a>() -> Parser<'a, u8, (String, Expr)> {
 }
 
 fn converter(parser_output: (Vec<Vec<u8>>, Vec<u8>)) -> Result<Expr, Box<dyn std::error::Error>> {
-    let expr_units = match parser_output {
-        (mut ls, e) => {
-            ls.push(e);
-            ls
-        }
-    };
+    let (mut expr_units, e) = parser_output;
+    expr_units.push(e);
+
     let (first, rest) = expr_units.split_first().unwrap();
     let expr_list = construct(first.to_owned(), rest.to_owned());
     Ok(expr_list)
 }
 
+// TODO? Automatic space() insertion in between Parsers should render this
+// function unnecessary. I wrote this function only because I don't know where
+// the trailing spaces in the output are coming from.
+fn trim(bytes: &[u8]) -> String {
+    match String::from_utf8(bytes.to_owned()) {
+        Ok(s) => (&s.trim()).to_string(),
+        _ => String::from(""),
+    }
+}
+
 fn construct(first: Vec<u8>, rest: Vec<Vec<u8>>) -> Expr {
     match rest.len() {
-        0 => Expr::Str(String::from_utf8(first).unwrap()),
+        0 => Expr::Str(trim(&first)),
         1 => {
             let last = rest.get(0).unwrap();
-            let first_as_expr = Expr::Str(String::from_utf8(first).unwrap());
-            let last_as_expr = Expr::Str(String::from_utf8(last.to_owned()).unwrap());
+            let first_as_expr = Expr::Str(trim(&first));
+            let last_as_expr = Expr::Str(trim(last));
             Expr::Choice(Box::new(first_as_expr), Box::new(last_as_expr))
         }
         _ => {
             let (car, cdr) = rest.split_first().unwrap();
-            let first_as_expr = Expr::Str(String::from_utf8(first).unwrap());
+            let first_as_expr = Expr::Str(trim(&first));
             Expr::Choice(
                 Box::new(first_as_expr),
                 Box::new(construct(car.to_owned(), cdr.to_owned())),
@@ -62,5 +69,5 @@ fn test_construct() {
 }
 
 pub fn trailing_pipe<'a>() -> Parser<'a, u8, Vec<u8>> {
-    none_of(b"|").repeat(0..) - space() - sym(b'|')
+    space() * none_of(b"|").repeat(0..) - space() - sym(b'|')
 }
