@@ -21,8 +21,7 @@ mod tests {
             .expect("std builder doesn't fail");
 
         for line in BufReader::new(inp).lines() {
-            // let pest_line = parse_rule(line.unwrap().as_bytes()).unwrap();
-            let pest_line = parse_rule_cand(line.unwrap().as_bytes()).unwrap();
+            let pest_line = parse_rule(line.unwrap().as_bytes()).unwrap();
 
             if let Err(e) = writeln!(out, "{}", pest_line) {
                 eprintln!("Couldn't write to file: {}", e);
