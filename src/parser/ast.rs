@@ -22,15 +22,22 @@ pub enum RuleType {
 #[derive(Debug)]
 pub enum Expr {
     Str(String),
+    Name(String),
     Seq(Box<Expr>, Box<Expr>),
     Choice(Box<Expr>, Box<Expr>),
+}
+
+impl Default for Expr {
+    fn default() -> Self {
+        Expr::Str(String::new())
+    }
 }
 
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Expr::*;
         match self {
-            Str(s) => write!(f, "\"{}\"", s),
+            Str(s) | Name(s) => write!(f, "\"{}\"", s),
             Seq(car, cdr) => {
                 write!(f, "{} ~ {}", car, cdr)
             }

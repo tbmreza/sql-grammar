@@ -14,6 +14,7 @@ fn underscored_name() {
 
 pub fn parse_rule(input: &[u8]) -> Option<Rule> {
     let parsed = rule_name_expr().parse(input);
+    // let parsed = rule_name_expr_cand().parse(input);
 
     match parsed {
         Ok((name, expr)) => {
